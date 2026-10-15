@@ -25,6 +25,31 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- My Mood App Widget with Quick Switch -->
+        <receiver
+            android:name=".widget.MyMoodWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.widget.ACTION_SET_MOOD" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/my_mood_widget_info" />
+        </receiver>
+
+        <!-- Friends Mood App Widget -->
+        <receiver
+            android:name=".widget.FriendsMoodWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/friends_mood_widget_info" />
+        </receiver>
     </application>
 
 </manifest>

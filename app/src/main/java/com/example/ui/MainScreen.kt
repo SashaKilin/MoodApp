@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SentimentSatisfied
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -228,6 +229,18 @@ fun MainScreen(
                     label = { Text(stringResource(R.string.tab_reactions)) },
                     modifier = Modifier.testTag("tab_reactions")
                 )
+                NavigationBarItem(
+                    selected = selectedTab == 3,
+                    onClick = { selectedTab = 3 },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Widgets,
+                            contentDescription = stringResource(R.string.tab_widgets)
+                        )
+                    },
+                    label = { Text(stringResource(R.string.tab_widgets)) },
+                    modifier = Modifier.testTag("tab_widgets")
+                )
             }
         }
     ) { innerPadding ->
@@ -242,6 +255,7 @@ fun MainScreen(
                     accountUid = viewModel.currentUserId,
                     onPresetSelected = { preset ->
                         viewModel.updateMood(preset.emoji, preset.name, preset.description)
+                        com.example.widget.MyMoodWidgetProvider.updateAllWidgets(context)
                     },
                     onOpenCustomEditor = { showEditMoodDialog = true },
                     onCopyId = {
@@ -251,11 +265,13 @@ fun MainScreen(
                         }
                     }
                 )
-                1 -> FriendsTab(
+                1 -> FriendsMoodScreen(
                     friends = friendsWithMood,
                     accountUid = viewModel.currentUserId,
                     onAddFriendClicked = { showAddFriendDialog = true },
-                    onSendReactionClicked = { friend -> targetFriendForReaction = friend },
+                    onSendReaction = { friendUid, emoji, msg ->
+                        viewModel.sendReaction(friendUid, emoji, msg)
+                    },
                     onRemoveFriend = { friendUid -> viewModel.removeFriend(friendUid) },
                     onCopyMyId = {
                         copyToClipboard(context, viewModel.currentUserId)
@@ -274,6 +290,17 @@ fun MainScreen(
                         } else {
                             viewModel.sendReaction(reaction.fromUserId, "❤️", "Спасибо за поддержку!")
                         }
+                    }
+                )
+                3 -> WidgetsHubScreen(
+                    userProfile = userProfile,
+                    friends = friendsWithMood,
+                    onQuickChangeMood = { emoji, name ->
+                        viewModel.updateMood(emoji, name, "")
+                        com.example.widget.MyMoodWidgetProvider.updateAllWidgets(context)
+                    },
+                    onShowSnackbar = { msg ->
+                        coroutineScope.launch { snackbarHostState.showSnackbar(msg) }
                     }
                 )
             }
@@ -311,6 +338,7 @@ fun MainScreen(
             onDismiss = { showEditMoodDialog = false },
             onConfirm = { emoji, title, note ->
                 viewModel.updateMood(emoji, title, note)
+                com.example.widget.MyMoodWidgetProvider.updateAllWidgets(context)
                 showEditMoodDialog = false
             }
         )

@@ -13,4 +13,7 @@
     <string name="friend_id_hint">Введите ID аккаунта друга</string>
     <string name="share_id_hint">Отправьте свой ID другу, чтобы он мог добавить вас в приложении</string>
     <string name="sign_out">Выйти</string>
+    <string name="tab_widgets">Виджеты</string>
+    <string name="widget_my_mood_desc">Текущее настроение и кнопки быстрого переключения</string>
+    <string name="widget_friends_mood_desc">Статусы настроения ваших друзей на главном экране</string>
 </resources>
