@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 64 &&
+             data.currentMood is string && data.currentMood.size() >= 1 && data.currentMood.size() <= 64 &&
+             data.moodEmoji is string && data.moodEmoji.size() >= 1 && data.moodEmoji.size() <= 16 &&
+             (!('moodNote' in data) || (data.moodNote is string && data.moodNote.size() <= 200)) &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidFriend(data) {
+      return data.friendUserId is string && isValidId(data.friendUserId) &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 64 &&
+             data.addedAt is timestamp && data.addedAt <= request.time;
+    }
+
+    function isValidReaction(data) {
+      return data.fromUserId is string && data.fromUserId == request.auth.uid &&
+             data.fromUserName is string && data.fromUserName.size() >= 1 && data.fromUserName.size() <= 64 &&
+             data.emoji is string && data.emoji.size() >= 1 && data.emoji.size() <= 16 &&
+             (!('message' in data) || (data.message is string && data.message.size() <= 200)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    match /users/{userId} {
+      // Allow single doc get for any authenticated user to view friends' moods
+      allow get: if isSignedIn() && isValidId(userId);
+      // List scoped to authenticated user to prevent bulk scraping
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       isValidId(userId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'currentMood', 'moodEmoji', 'createdAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'currentMood', 'moodEmoji', 'moodNote', 'createdAt', 'updatedAt']) &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidUserProfile(incoming());
+
+      allow update: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       isValidId(userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'currentMood', 'moodEmoji', 'moodNote', 'updatedAt']);
+
+      allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
+
+      // Friends subcollection
+      match /friends/{friendId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(friendId) &&
+                         incoming().keys().hasAll(['friendUserId', 'displayName', 'addedAt']) &&
+                         incoming().keys().hasOnly(['friendUserId', 'displayName', 'addedAt']) &&
+                         isValidFriend(incoming());
+
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(friendId) &&
+                         incoming().friendUserId == existing().friendUserId &&
+                         incoming().addedAt == existing().addedAt &&
+                         isValidFriend(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['displayName']);
+
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(friendId);
+      }
+
+      // Mood reactions/nudges
+      match /reactions/{reactionId} {
+        allow read, delete: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         isValidId(reactionId) &&
+                         isValidId(userId) &&
+                         incoming().fromUserId == request.auth.uid &&
+                         incoming().keys().hasAll(['fromUserId', 'fromUserName', 'emoji', 'createdAt']) &&
+                         incoming().keys().hasOnly(['fromUserId', 'fromUserName', 'emoji', 'message', 'createdAt']) &&
+                         isValidReaction(incoming());
+      }
+    }
+  }
+}

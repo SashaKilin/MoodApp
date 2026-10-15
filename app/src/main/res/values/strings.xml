@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">MoodSync</string>
+    <string name="sign_in_title">Делись настроением с друзьями</string>
+    <string name="sign_in_subtitle">Авторизуйтесь через Google, чтобы синхронизировать своё настроение в облаке и видеть эмоции близких в реальном времени</string>
+    <string name="sign_in_with_google">Войти через Google</string>
+    <string name="tab_my_mood">Моё настроение</string>
+    <string name="tab_friends">Друзья</string>
+    <string name="tab_reactions">Поддержка</string>
+    <string name="account_id_label">Ваш ID аккаунта</string>
+    <string name="copy_id">Скопировать ID</string>
+    <string name="id_copied">ID скопирован в буфер обмена</string>
+    <string name="add_friend">Добавить друга</string>
+    <string name="friend_id_hint">Введите ID аккаунта друга</string>
+    <string name="share_id_hint">Отправьте свой ID другу, чтобы он мог добавить вас в приложении</string>
+    <string name="sign_out">Выйти</string>
+</resources>

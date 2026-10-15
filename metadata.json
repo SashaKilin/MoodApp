@@ -1,0 +1,6 @@
+{
+  "name": "MoodSync",
+  "description": "Share your live mood status with friends in real-time, connect via User ID, and sync in the cloud with Google Sign-In",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
